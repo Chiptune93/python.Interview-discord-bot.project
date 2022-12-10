@@ -2,9 +2,9 @@
 
 - 라이브러리 설치
     ~~~bash
-    $ pip install -U discord.py # 디스코드 패키지
-    $ pip install -U python-dotenv # env 파일로 환경 변수 세팅하기 위해 설치.
-    $ pip install -U certifi # 인증 관련 문제 발생.
+    $ pip3 install -U discord.py # 디스코드 패키지
+    $ pip3 install -U python-dotenv # env 파일로 환경 변수 세팅하기 위해 설치.
+    $ pip3 install -U certifi # 인증 관련 문제 발생.
     ~~~
 
 - VS Code Extension 설치
