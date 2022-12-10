@@ -62,12 +62,10 @@ async def on_message(message):
             +'\n! set time [number] > 문항 당 시간'
             + '```'
         )
-
-    if message.author == client.user:
+        
+    # other message ignore! 
+    else :
         return
-
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello!')
 
 
 client.run(TOKEN)
