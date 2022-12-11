@@ -32,18 +32,19 @@ async def on_ready():
         print(guild)
     
     print('-------------------------')
+
     
-
-
-# 간단한 요청 & 응답 예제
-# 서버 내 채널에서 '$hello' 보낼 시, 봇이 'Hello!' 응답.
 @client.event
 async def on_message(message):
     print("---------------------------")
-    print("message > ", message)
-    print("message > ", message.type)
-    print("message > ", message.author)
-    print("message > ", message.author.bot)
+    print("message all -> ", message)
+    print("---------------------------")
+    print("guild name           -> ", message.guild.name)
+    print("channel name         -> ", message.channel.name)
+    print("message type         -> ", message.type)
+    print("message sender       -> ", message.author.name)
+    print("message bot y/n      -> ", message.author.bot)
+    print("message content      -> ", message.content)
     print("---------------------------")
     
     # 새로운 서버에 봇이 추가되었을 때, welcome message
@@ -63,9 +64,73 @@ async def on_message(message):
             + '```'
         )
         
+    elif message.author.bot == False and message.content.startswith('! help'):
+        # help message
+        send_help_message()
+    elif message.author.bot == False and message.content.startswith('! start'):
+        # start
+        # 현재 인터뷰 중인지 체크
+        if chk_interview_now():
+            # 인터뷰 중이면 명령 실행 X
+            return
+        else:
+            # 인터뷰 시작.
+            interview_start()
+    elif message.author.bot == False and message.content.startswith('! stop'):
+        # stop
+        # 현재 인터뷰 중인지 체크
+        if chk_interview_now():
+            # 인터뷰 중이면 중지.
+            interview_stop()
+        else:
+            # 인터뷰 중이 아니면 명령 실행 X
+            return
+    elif message.author.bot == False and message.content.startswith('! pause'):
+        # pause
+        # 현재 인터뷰 중인지 체크
+        if chk_interview_now():
+            # 인터뷰 중이면 일시 정지
+            interview_pause()
+        else:
+            # 인터뷰 중이 아니면 명령 실행 X
+            return
+    elif message.author.bot == False and message.content.startswith('! set time'):
+        # set time
+        # 현재 인터뷰 중인지 체크
+        if chk_interview_now():
+            # 인터뷰 중이면 명령 실행
+            interview_set_time()
+        else:
+            # 인터뷰 중이 아니면 명령 실행 X
+            return
+        
     # other message ignore! 
     else :
         return
 
 
 client.run(TOKEN)
+
+
+async def send_help_message():
+    print("send help message")
+    
+    
+async def chk_interview_now():
+    print("chk interview now")
+    
+    
+async def interview_start():
+    print("interview start")
+    
+    
+async def interview_stop():
+    print("interview stop")
+    
+    
+async def interview_pause():
+    print("interview pause")
+    
+    
+async def interview_set_time():
+    print("interview set time")
