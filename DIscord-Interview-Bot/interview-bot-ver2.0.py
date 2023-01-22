@@ -9,8 +9,13 @@ import random
 import time
 
 intents = discord.Intents.all()
+# 사용자가 입력하는 명령어의 프리픽스를 설정한다.
+# 여기서 '! '가 되어있으면 사용자는 '! 명령어' 를 입력해야 봇이 반응한다.
 prefix = "! "
+# 봇 초기화
 bot = commands.Bot(command_prefix=prefix, intents=intents)
+# 봇에는 기본적으로 헬프 명령어가 잡혀져 있어 따로 'help' 명령어를 구현하고자 한다면
+# 봇에서 제거를 해주어야 한다.
 bot.remove_command('help')
 
 # 사용자 인터뷰 전역 객체
