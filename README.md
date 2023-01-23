@@ -118,17 +118,71 @@ Discord-with-Notion
 
 ## Service
 
-centOS7 Docker 환경에서 서비스
+1. centOS7 Docker 환경에서 서비스하려면?
+
+    ```bash
+    docker run -d -p 8080:80 -e LC_ALL=ko_KR.utf8 -it --name centos centos:7
+    docker exec -it centos /bin/bash
+
+    yum install python3
+
+    pip3 install discord.py
+    pip3 install python-dotenv
+    pip3 install requests
+
+    python3 {pyfile}
+    ```
+
+    위 내용을 도커 이미지 OS 상에서 실행 시켜야 했음.
+
+2. 파이썬 라이브러리의 install 방식 
+
+    ```bash
+    # 현재 라이브러리 목록을 파일로 떨궈줌
+    pip3 freeze > requirements.txt
+
+    # 해당 파일을 읽어서 라이브러리 의존성을 설치
+    pip3 install -r requirements.txt
+    ```
+
+    해당 방식을 통해 라이브러리 설치를 간소화 할 수 있었음.
+
+3. Dockerfile 구성
+
+기본 CentOS7 이미지 상에서 개발 환경을 세팅하려고 하니 복잡했다.
+
+찾아보니 https://hub.docker.com/_/python 파이썬이 깔려있는 기본 이미지가 있었다.
+
+따라서, 이를 베이스로 다음과 같은 절차를 통해 이미지를 구성하기로 했다
+
+1. 파이썬 베이스 이미지 로딩
+2. 라이브러리 설치
+3. 파이썬 파일 구동
+
+위 절차를 포함한 dockerfile 을 생성하였다.
+
+```dockerfile
+# main image
+FROM python:3.10.8-buster 
+MAINTAINER chiptune "eoen012@gmail.com"
+# 호스트 현재 경로를 /app 경로에 복사
+COPY . /app
+# 도커 이미지 내 작업 경로를 /app 으로 설정
+WORKDIR /app
+# 라이브러리 설치 시스템 명령을 실행
+RUN pip3 install -r requirements.txt
+# 진입점을 python3 로 잡음
+ENTRYPOINT ["python3"]
+# 명령 인수를 줘서 실행시킴
+CMD ["interview-bot-ver2.0.py"]
+
+```
+
+이제 이 파일 기준으로 이미지를 빌드하고 러닝한다.
 
 ```bash
-docker run -d -p 8080:80 -e LC_ALL=ko_KR.utf8 -it --name centos centos:7
-docker exec -it centos /bin/bash
-
-yum install python3
-
-pip3 install discord.py
-pip3 install python-dotenv
-pip3 install requests
-
-python3 {pyfile}
+docker build . -t bot:{tag}
+docker run -d -it --name bot bot:{tag}
 ```
+
+현재까지 테스트 결과 봇이 잘 동작한다.
