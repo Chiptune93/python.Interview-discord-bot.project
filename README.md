@@ -115,3 +115,20 @@ Discord-with-Notion
         requests.post(secretkeys.WEB_HOOK_URL, data= hookData)
 
         ```
+
+## Service
+
+centOS7 Docker 환경에서 서비스
+
+```bash
+docker run -d -p 8080:80 -e LC_ALL=ko_KR.utf8 -it --name centos centos:7
+docker exec -it centos /bin/bash
+
+yum install python3
+
+pip3 install discord.py
+pip3 install python-dotenv
+pip3 install requests
+
+python3 {pyfile}
+```

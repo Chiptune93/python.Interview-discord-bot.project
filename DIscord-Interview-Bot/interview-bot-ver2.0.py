@@ -1,4 +1,4 @@
-# bot.py
+#-*- coding: utf-8 -*-
 import os
 
 import discord
@@ -38,29 +38,10 @@ data = {
 @bot.event
 async def on_ready():
     print("bot is ready!")
-    print(bot)
-    connectedServer = '[연결된 서버 목록]'
-    print(connectedServer)
-    print('-------------------------')
-    for guild in bot.guilds:
-        print(guild)
-
-    print('-------------------------')
 
 
 @bot.event
 async def on_message(message):
-    print("---------------------------")
-    print("message all -> ", message)
-    print("---------------------------")
-    print("guild name           -> ", message.guild.name)
-    print("channel name         -> ", message.channel.name)
-    print("message type         -> ", message.type)
-    print("message sender       -> ", message.author.name)
-    print("message bot y/n      -> ", message.author.bot)
-    print("message content      -> ", message.content)
-    print("---------------------------")
-
     # 새로운 서버에 봇이 추가되었을 때, welcome message
     if message.type == discord.MessageType.new_member and message.author.name == 'Interview-Bot' and message.author.bot == True:
         await message.channel.send(
@@ -86,7 +67,6 @@ async def on_message(message):
 @bot.event
 async def on_guild_join(guild):
     print("on guild join event")
-    print(guild)
 
 
 @bot.command()
@@ -110,7 +90,6 @@ async def help(message):
 
 @bot.command()
 async def start(message):
-    print(message)
     # 명령자 아이디
     member_id = message.author.id
     print("member id : ", member_id)
@@ -162,9 +141,6 @@ async def next(message):
         dataSet = interview_data.get('data')[nowIndex]
         q = dataSet[0]
         a = dataSet[1]
-        print("now index is : ", nowIndex)
-        print("index question : ", q)
-        print("index answer : ", a)
 
         await message.channel.send(
             '```'
@@ -191,9 +167,6 @@ async def ans(message):
         dataSet = interview_data.get('data')[nowIndex]
         q = dataSet[0]
         a = dataSet[1]
-        print("now index is : ", nowIndex)
-        print("index question : ", q)
-        print("index answer : ", a)
 
         await message.channel.send(
             '```'
@@ -237,11 +210,7 @@ def notion_data_set():
         "and": [{"property": "category", "select": {"equals": "normal-tech"}}]}}
 
     response = requests.post(b + d + "/query", headers=header, data=query)
-    print("result data length -> ", len(response.json()["results"]))
-    dataLen = len(response.json()["results"])
     data = []
-
-    print(response.json()["results"])
 
     for q in response.json()["results"]:
         row = []
