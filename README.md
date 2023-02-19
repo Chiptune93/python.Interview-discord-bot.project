@@ -116,6 +116,36 @@ Discord-with-Notion
 
         ```
 
+## discord.js 가이드
+
+https://v12.discordjs.guide/
+
+
+## discord.command.ext
+
+```python
+from discord.ext import commands
+```
+
+- 위와 같은 방식으로 import 하여 사용
+- discord.py 보다 직관적인 방식으로 코딩이 가능. 기존 py는 async 한 하나의 함수로 로직을 짜서 안에서 분기 처리하는 방식으로 코딩해야 했기 때문에 함수 사용 및 코딩에 있어서 불편한 감이 있었음.
+- 커맨드 방식은 봇에서 처리할 명령 자체를 따로 함수로 구현 후, @command 를 통해 매핑하여 처리할 수 있음.
+- 봇 관련된 코딩을 조금 더 정갈하게 할 수 있다는 장점이 있는 것으로 생각됨.
+- discord.py 와 같이 사용하면 편함. 예를 들어, 메세지 참조 및 기타 인텐트를 가져와 사용할 때는 discord.py사용, 봇 커맨드 관련 코딩 시에는 commands 사용.
+
+```python
+# 사용자가 입력하는 명령어의 프리픽스를 설정한다.
+# 여기서 '! '가 되어있으면 사용자는 '! 명령어' 를 입력해야 봇이 반응한다.
+prefix = "! "
+# 봇 초기화
+bot = commands.Bot(command_prefix=prefix, intents=intents)
+# 봇에는 기본적으로 헬프 명령어가 잡혀져 있어 따로 'help' 명령어를 구현하고자 한다면
+# 봇에서 제거를 해주어야 한다.
+bot.remove_command('help')
+```
+
+- 위 처럼 봇 명령 시 사용할 prefix를 가지고 시작함.
+
 ## Service
 
 1. centOS7 Docker 환경에서 서비스하려면?
@@ -186,3 +216,201 @@ docker run -d -it --name bot bot:{tag}
 ```
 
 현재까지 테스트 결과 봇이 잘 동작한다.
+
+
+# Notion DB CRUD
+
+## 사용자가 데이터 요청할 수 있게 변경하기.
+
+- 사용자가 처음에 데이터를 추가할 수 있도록 하려고 했으나 노션 API의 권한 문제로 인해 해당 기능은 개발 불가했다.
+- 대신 사용자가 요청하는 방식으로 제공 DB에 데이터를 넣을 수 있게 변경하려고 한다.
+    - 노션 데이터베이스의 각 row는 일반적인 String이나 다른 객체가 아닌 노션의 '페이지' 형태로 저장되기 때문에 API 요청 시에도 데이터베이스 섹션에서 찾을게 아니라 해당 데이터베이스 페이지로 "페이지 생성" 요청을 보내야 한다.
+    ([참고 링크](https://stackoverflow.com/questions/69150120/how-to-insert-data-in-database-via-notion-api))
+
+## Notion Dababase 에 데이터 넣기.
+
+- 기본적으로 데이터베이스의 하나의 Row는 사실 Row Data가 아니라, 노션 상 "페이지" 에 해당한다.
+- 따라서, 데이터를 넣기 위해서는 페이지 생성 요청을 보내야 생성이 가능하다.
+
+### 어떻게 데이터를 요청할 것인가?
+
+- 페이지 생성 요청을 하기 위해 [공식 페이지](https://developers.notion.com/reference/post-page)에서 살펴보면 생각보다 어떤 형태로 값을 줘야 하는지 불분명 하다.
+- 내용을 보고 요청을 작성하고 요청을 실제 보내보면, 어떤 값이 정의되어야 한다는 메세지를 출력해준다.
+
+    ```bash
+    {"object":"error","status":400,"code":"validation_error","message":"body failed validation. Fix one:\nbody.properties.question.name should be not present, instead was `\"Project name\"`.\nbody.properties.question.rich_text should be defined, instead was `undefined`.\nbody.properties.question.number should be defined, instead was `undefined`.\nbody.properties.question.url should be defined, instead was `undefined`.\nbody.properties.question.select should be defined, instead was `undefined`.\nbody.properties.question.multi_select should be defined, instead was `undefined`.\nbody.properties.question.people should be defined, instead was `undefined`.\nbody.properties.question.email should be defined, instead was `undefined`.\nbody.properties.question.phone_number should be defined, instead was `undefined`.\nbody.properties.question.date should be defined, instead was `undefined`.\nbody.properties.question.checkbox should be defined, instead was `undefined`.\nbody.properties.question.relation should be defined, instead was `undefined`.\nbody.properties.question.files should be defined, instead was `undefined`.\nbody.properties.question.status should be defined, instead was `undefined`.\nbody.properties.category.id should be defined, instead was `undefined`.\nbody.properties.category.name should be defined, instead was `undefined`.\nbody.properties.category.start should be defined, instead was `undefined`."}
+    ```
+
+- 문제는 저기서 추천하는 항목 값들이 필요없는 값이며, 실제 정의하더라도 요청이 200으로 떨어지지 않는다는 점이다.
+
+- 그래서 생각해낸 방법은, 실제 데이터를 쿼리하는 작업을 하면 response에 json형태로 값이 넘어오게 되는데, 이 때 한 데이터만 추출하여 해당 형식을 온라인 json Formatter 로 형식을 맞추어 본 후, 그대로 가져와 사용하는 것이다.
+
+- 예를 들어 다음과 같이 조회된 하나의 데이터가 있다면
+
+    ```bash
+    {"object":"page","id":"33f9755e-b839-4240-a221-4afae1039897","created_time":"2023-02-19T08:10:00.000Z","last_edited_time":"2023-02-19T08:10:00.000Z","created_by":{"object":"user","id":"eaaba968-7542-4fbf-bcaf-2768b30a0412"},"last_edited_by":{"object":"user","id":"eaaba968-7542-4fbf-bcaf-2768b30a0412"},"cover":null,"icon":null,"parent":{"type":"database_id","database_id":"44564026-89cf-4d82-9c11-0858a22f2365"},"archived":false,"properties":{"category":{"id":"%3CqCf","type":"select","select":{"id":"6b9385c7-26d1-4720-ad5c-a8bb228959fd","name":"live","color":"green"}},"answer":{"id":"%5DBWd","type":"rich_text","rich_text":[{"type":"text","text":{"content":"높은 응집도와 낮은 결합도를 갖는 코드를 말합니다.","link":null},"annotations":{"bold":false,"italic":false,"strikethrough":false,"underline":false,"code":false,"color":"default"},"plain_text":"높은 응집도와 낮은 결합도를 갖는 코드를 말합니다.","href":null}]},"ref":{"id":"h%3CR_","type":"rich_text","rich_text":[]},"question":{"id":"title","type":"title","title":[{"type":"text","text":{"content":"유연한 코드는 무엇인가요?","link":null},"annotations":{"bold":false,"italic":false,"strikethrough":false,"underline":false,"code":false,"color":"default"},"plain_text":"유연한 코드는 무엇인가요?","href":null}]}},"url":"https://www.notion.so/33f9755eb8394240a2214afae1039897"}
+    ```
+
+- 이를 포매터를 이용해 바꿔보면 이렇게 표시된다.
+
+    ```bash
+    {
+        'object': 'page',
+        'id': '2094753a-a4ba-4894-a0b4-4ab2b02d62a0',
+        'created_time': '2022-08-22T05:56:00.000Z',
+        'last_edited_time': '2023-02-12T14:10:00.000Z',
+        'created_by': {
+            'object': 'user',
+            'id': 'e6bf5ee1-fa3f-4e6f-be2a-fa03f302fc19'
+        },
+        'last_edited_by': {
+            'object': 'user',
+            'id': 'e6bf5ee1-fa3f-4e6f-be2a-fa03f302fc19'
+        },
+        'cover': None,
+        'icon': None,
+        'parent': {
+            'type': 'database_id',
+            'database_id': '44564026-89cf-4d82-9c11-0858a22f2365'
+        },
+        'archived': False,
+        'properties': {
+            'category': {
+                'id': '%3CqCf',
+                'type': 'select',
+                'select': {
+                        'id': '6b9385c7-26d1-4720-ad5c-a8bb228959fd',
+                        'name': 'live',
+                        'color': 'green'
+                }
+            },
+            'answer': {
+                'id': '%5DBWd',
+                'type': 'rich_text',
+                'rich_text': [
+                        {
+                            'type': 'text',
+                            'text': {
+                                'content': '높은 응집도와 낮은 결합도를 갖는 코드를 말합니다.',
+                                'link': None
+                            },
+                            'annotations': {
+                                'bold': False,
+                                'italic': False,
+                                'strikethrough': False,
+                                'underline': False,
+                                'code': False,
+                                'color': 'default'
+                            },
+                            'plain_text': '높은 응집도와 낮은 결합도를 갖는 코드를 말합니다.',
+                            'href': None
+                        }
+                ]
+            },
+            'ref': {
+                'id': 'h%3CR_',
+                'type': 'rich_text',
+                'rich_text': [
+                ]
+            },
+            'question': {
+                'id': 'title',
+                'type': 'title',
+                'title': [
+                        {
+                            'type': 'text',
+                            'text': {
+                                'content': '유연한 코드는 무엇인가요?',
+                                'link': None
+                            },
+                            'annotations': {
+                                'bold': False,
+                                'italic': False,
+                                'strikethrough': False,
+                                'underline': False,
+                                'code': False,
+                                'color': 'default'
+                            },
+                            'plain_text': '유연한 코드는 무엇인가요?',
+                            'href': None
+                        }
+                ]
+            }
+        },
+        'url': 'https://www.notion.so/2094753aa4ba4894a0b44ab2b02d62a0'
+    }
+    ```
+
+- 저렇게 표현된 값 중에서, properties 항목만 가지고와 요청에 사용한다. 그러면 요청이 잘못 응답하거나 실패할 일이 없다. 다만 기존에 있는 값 몇개는 빼주어야 한다. 
+
+- 예를 들면, 아이디 값 같은 경우에는 신규로 삽입하는 경우에는 필요없으며, 기타 값들도 주석처리하여 사용 하지 않고 요청을 보낸다.
+
+    ```bash
+    'properties': {
+            'category': {
+                #'id': '%3CqCf',
+                'type': 'select',
+                'select': {
+                    #'id': '6b9385c7-26d1-4720-ad5c-a8bb228959fd',
+                    'name': 'request',
+                    'color': 'red'
+                }
+            },
+            'answer': {
+                #'id': '%5DBWd',
+                'type': 'rich_text',
+                'rich_text': [
+                    {
+                        'type': 'text',
+                        'text': {
+                            'content': arg2,
+                            'link': None
+                        },
+                        'annotations': {
+                            'bold': False,
+                            'italic': False,
+                            'strikethrough': False,
+                            'underline': False,
+                            'code': False,
+                            'color': 'default'
+                        },
+                        #'plain_text': '높은 응집도와 낮은 결합도를 갖는 코드를 말합니다.',
+                        'href': None
+                    }
+                ]
+            },
+            'ref': {
+                #'id': 'h%3CR_',
+                'type': 'rich_text',
+                'rich_text': [
+                ]
+            },
+            'question': {
+                'id': 'title',
+                'type': 'title',
+                'title': [
+                    {
+                        'type': 'text',
+                        'text': {
+                            'content': arg1,
+                            'link': None
+                        },
+                        'annotations': {
+                            'bold': False,
+                            'italic': False,
+                            'strikethrough': False,
+                            'underline': False,
+                            'code': False,
+                            'color': 'default'
+                        },
+                        #'plain_text': '유연한 코드는 무엇인가요?',
+                        'href': None
+                    }
+                ]
+            }
+        }
+    ```
+
+- 사실 문서를 보고 이해하는 것이 향후 사용에 있어 더 편할 수 있겠지만, 뭔가 안맞는 부분이 있는 것 같다.
+필요없는 항목인데도 정의되어야 한다고 400에러를 뱉어내는 것을 보면 말이다.
+
