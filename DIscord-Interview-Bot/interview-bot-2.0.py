@@ -60,7 +60,7 @@ async def on_message(message):
             + '\n! next > 다음 문제 보기'
             + '\n! ans > 현재 문제 정답 보기'
             + '\n! fin > 종료 및 점수 출력'
-            + '\n! req_data 질문 답변 > 질문 등록 요청하기.'
+            + '\n! req_data 질문 [,] 답변 > 데이터 등록 요청'
             + '```'
         )
     elif message.author.bot == True:
@@ -129,6 +129,7 @@ async def help(message):
         + '\n! next > 다음 문제 보기'
         + '\n! ans > 현재 문제 정답 보기'
         + '\n! fin > 종료 및 점수 출력'
+        + '\n! req_data 질문 [,] 답변 > 데이터 등록 요청'
         + '```'
     )
 

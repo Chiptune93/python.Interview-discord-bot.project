@@ -212,7 +212,7 @@ CMD ["interview-bot-ver2.0.py"]
 
 ```bash
 docker build . -t bot:{tag}
-docker run -d -it --name bot bot:{tag}
+docker run -d -p 8080:80 -it --name bot bot:{tag}
 ```
 
 현재까지 테스트 결과 봇이 잘 동작한다.
