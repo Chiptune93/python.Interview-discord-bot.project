@@ -1,11 +1,11 @@
 import requests
 
 # Intergration API Token
-t = 'secret_pUXwHhCZ4gRz8apsCDeqO7yly0OsvIMP01XuN3YJZbe'
+t = ""
 # Database query base url
 b = "https://api.notion.com/v1/databases/"
 # Database id
-d = "fc80268353ac4b4e81eb47bb2274bc44"
+d = ""
 # header
 header = {"Authorization": t, "Notion-Version": "2022-06-28"}
 # query 조건문
